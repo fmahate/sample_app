@@ -25,7 +25,7 @@ describe UsersController do
                         :content => @user.name)
     end
     
-    it "should have the right title" do
+    it "should have the right user's name" do
       get :show, :id => @user
       response.should have_selector("h1",
                         :content => @user.name)
@@ -35,6 +35,13 @@ describe UsersController do
       get :show, :id => @user
       response.should have_selector("h1>img",
                         :class => "gravatar")
+    end
+    
+    it "should have the right URL" do
+      get :show, :id => @user
+      response.should have_selector("td>a",
+                        :content => user_path(@user),
+                        :href    => user_path(@user))
     end
     
   end
