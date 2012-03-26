@@ -34,7 +34,7 @@ class User < ActiveRecord::Base
     def encrypt_password
       # self needed as there is assignment,
       # otherwise local var will be created
-      self.salt = make_salt if new_record?
+      self.salt = make_salt unless has_password?(password)
       self.encrypted_password = encrypt(password)
     end
     
