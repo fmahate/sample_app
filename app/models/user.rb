@@ -60,6 +60,7 @@ end
 
 
 
+
 # == Schema Information
 #
 # Table name: users
@@ -71,5 +72,6 @@ end
 #  updated_at         :datetime
 #  encrypted_password :string(255)
 #  salt               :string(255)
+#  admin              :boolean         default(FALSE)
 #
 
