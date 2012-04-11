@@ -56,6 +56,90 @@ describe UsersController do
       
     end
     
+    # Test for exercise 10.4
+    describe "delete link" do
+    
+      before(:each) do
+        @first_username  = "First User"
+        first_normaluser = Factory(:user, 
+                                   :name  => @first_username)
+        @second_username = "Second User"
+        second_adminuser = Factory(:user, 
+                                   :name  => @second_username,
+                                   :email => "ex-2@example.com")
+        @third_username  = "Third User"
+      end
+      
+      describe "for signed-in non-admin user" do
+      
+        before(:each) do
+          third_normaluser = Factory(:user, 
+                                     :name  => @third_username,
+                                     :email => "ex-3@example.com")
+          test_sign_in(third_normaluser)
+          get :index
+        end
+      
+        it "should not show for normal users" do
+          response.should_not have_selector("ul.users>li>a",
+                                        :content => "delete",
+                                        :title   => "Delete #{@first_username}",
+                                        :href    => "/users/1")
+        end
+        
+        it "should not show for admin users" do
+          response.should_not have_selector("ul.users>li>a",
+                                        :content => "delete",
+                                        :title   => "Delete #{@second_username}",
+                                        :href    => "/users/2")
+        end
+        
+        it "should not show for the current normal user" do
+          response.should_not have_selector("ul.users>li>a",
+                                        :content => "delete",
+                                        :title   => "Delete #{@third_username}",
+                                        :href    => "/users/3")
+        end
+        
+      end
+      
+      describe "for signed-in admin user" do
+      
+        before(:each) do
+          third_adminuser = Factory(:user, 
+                                    :name  => @third_username,
+                                    :email => "ex-3@example.com",
+                                    :admin => true)
+          test_sign_in(third_adminuser)
+          get :index
+        end
+      
+        it "should show for normal users" do
+          response.should have_selector("ul.users>li>a",
+                                        :content => "delete",
+                                        :title   => "Delete #{@first_username}",
+                                        :href    => "/users/1")
+        end
+        
+        it "should show for admin users" do
+          response.should have_selector("ul.users>li>a",
+                                        :content => "delete",
+                                        :title   => "Delete #{@second_username}",
+                                        :href    => "/users/2")
+        end
+        
+        it "should not show for the current admin user" do
+          response.should_not have_selector("ul.users>li>a",
+                                        :content => "delete",
+                                        :title   => "Delete #{@third_username}",
+                                        :href    => "/users/3")
+        end
+        
+      end
+      
+    end
+    # Test for exercise 10.4
+    
   end
     
   describe "GET 'show'" do
@@ -275,6 +359,50 @@ describe UsersController do
     
   end
   
+  # Test for exercise 10.3
+  describe "authentication of new/create pages" do
+
+    before(:each) do
+      @attr = { :name => "New User", :email => "user@example.com",
+                :password => "foobar", :password_confirmation => "foobar" }
+    end
+
+    describe "for non-signed-in users" do
+      
+      it "should allow access to 'new'" do
+        get :new
+        response.should be_success
+      end
+
+      it "should allow access to 'create'" do
+        post :create, :user => @attr
+        controller.should be_signed_in
+      end
+
+    end
+
+    describe "for signed-in users" do
+
+      before(:each) do
+        @user = Factory(:user)
+        test_sign_in(@user)
+      end
+
+      it "should deny access to 'new'" do
+        get :new
+        response.should redirect_to(root_path)
+      end
+
+      it "should deny access to 'create'" do
+        post :create, :user => @attr
+        response.should redirect_to(root_path)
+      end
+
+    end
+
+  end
+  # Test for exercise 10.3
+  
   describe "authentication of edit/update pages" do
 
     before(:each) do
@@ -340,9 +468,16 @@ describe UsersController do
     describe "as an admin user" do
 
       before(:each) do
-        admin = Factory(:user, :email => "admin@example.com", :admin => true)
-        test_sign_in(admin)
+        @admin = Factory(:user, :email => "admin@example.com", :admin => true)
+        test_sign_in(@admin)
       end
+      
+      # Test for exercise 10.5
+      it "should protect the page" do
+        delete :destroy, :id => @admin
+        response.should redirect_to(root_path)
+      end
+      # Test for exercise 10.5
 
       it "should destroy the user" do
         lambda do
