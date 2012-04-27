@@ -8,42 +8,57 @@ describe PagesController do
   end
 
   describe "GET 'home'" do
-  
-    it "should be successful" do
-      get 'home'
-      response.should be_success
-    end
     
-    it "should have the right title" do
-      get 'home'
-      response.should have_selector("title",
-                        :content => "#{@base_title} | Home")
-    end
-    
-    it "should have a non-blank body" do
-      get 'home'
-      response.body.should_not =~ /<body>\s*<\/body>/
+    describe "when not signed in" do
+
+      before(:each) do
+        get :home
+      end
+
+      it "should be successful" do
+        response.should be_success
+      end
+
+      it "should have the right title" do
+        response.should have_selector("title",
+                                      :content => "#{@base_title} | Home")
+      end
+      
+      it "should have a non-blank body" do
+        response.body.should_not =~ /<body>\s*<\/body>/
+      end
+      
     end
     
     # Test for exercise 11.2
-    describe "for signed-in users" do
+    describe "when signed in" do
       
       before(:each) do
         @user = test_sign_in(Factory(:user))
+        other_user = Factory(:user, :email => Factory.next(:email))
+        other_user.follow!(@user)
       end
       
-      it "with no microposts should display 0 microposts" do
+      it "should have the right follower/following counts" do
+        get :home
+        response.should have_selector("a", :href => following_user_path(@user),
+                                           :content => "0 following")
+        response.should have_selector("a", :href => followers_user_path(@user),
+                                           :content => "1 follower")
+      end
+      
+      it "by user with no microposts should display 0 microposts" do
         get 'home'
         response.should have_selector("span.microposts", :content => "0 microposts")
       end
       
-      it "with 1 micropost should display 1 micropost" do
+      it "by user with 1 micropost should display 1 micropost" do
         @mp1 = Factory(:micropost, :user => @user)
         get 'home'
         response.should have_selector("span.microposts", :content => "1 micropost")
       end
       
-      it "with 2 microposts should display 2 microposts" do
+      it "by user with 2 microposts should display 2 microposts" do
         @mp1 = Factory(:micropost, :user => @user)
         @mp2 = Factory(:micropost, :user => @user)
         get 'home'
