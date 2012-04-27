@@ -200,7 +200,6 @@ describe User do
       [@mp1, @mp2].each do |micropost|
         Micropost.find_by_id(micropost.id).should be_nil
       end
-      
     end
     
     describe "status feed" do
@@ -286,6 +285,18 @@ describe User do
       @user.follow!(@followed)
       @followed.followers.should include(@user)
     end
+    
+    # Exercise 12.1
+    it "should destroy associated relationships on user destroy" do
+      follower = Factory(:user, :email => Factory.next(:email))
+      relationship1 = @user.follow!(@followed)
+      relationship2 = follower.follow!(@user)
+      @user.destroy
+      [relationship1, relationship2].each do |relationship|
+        Relationship.find_by_id(relationship.id).should be_nil
+      end      
+    end
+    # Exercise 12.1
     
   end
   
